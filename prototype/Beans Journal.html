@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Beans · Daily Journal</title>
+<style>
+  html, body { margin: 0; padding: 0; background: #f0eee9; }
+  body { font-family: -apple-system, system-ui, sans-serif; }
+</style>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+
+<div id="root"></div>
+
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="app-data.jsx"></script>
+<script type="text/babel" src="app-shell.jsx"></script>
+<script type="text/babel" src="screen-today.jsx"></script>
+<script type="text/babel" src="screen-calendar.jsx"></script>
+<script type="text/babel" src="screen-archive.jsx"></script>
+<script type="text/babel" src="screen-insights-settings.jsx"></script>
+<script type="text/babel" src="app.jsx"></script>
+
+<script type="text/babel">
+  const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+    "primaryTheme": "notebook",
+    "showAllVariations": false
+  }/*EDITMODE-END*/;
+
+  function Root() {
+    const [tweaks, setTweak] = useTweaks(TWEAK_DEFAULTS);
+    const showAll = tweaks.showAllVariations;
+
+    if (!showAll) {
+      // Single-screen mode — center one phone with the chosen theme
+      return (
+        <div style={{
+          minHeight: '100vh', background: '#f0eee9',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: 40,
+        }}>
+          <div style={{ boxShadow: '0 20px 60px rgba(0,0,0,0.12), 0 4px 16px rgba(0,0,0,0.06)', borderRadius: 8, overflow: 'hidden' }}>
+            <BeansApp themeName={tweaks.primaryTheme} label={`Beans · ${tweaks.primaryTheme}`}/>
+          </div>
+          <TweaksPanel title="Tweaks">
+            <TweakSection title="Theme">
+              <TweakRadio
+                value={tweaks.primaryTheme}
+                onChange={(v) => setTweak('primaryTheme', v)}
+                options={[
+                  { value: 'cream', label: 'Cream' },
+                  { value: 'dusk', label: 'Dusk' },
+                  { value: 'notebook', label: 'Paper' },
+                ]}
+              />
+            </TweakSection>
+            <TweakSection title="View">
+              <TweakToggle
+                label="Show all variations on canvas"
+                value={tweaks.showAllVariations}
+                onChange={(v) => setTweak('showAllVariations', v)}
+              />
+            </TweakSection>
+          </TweaksPanel>
+        </div>
+      );
+    }
+
+    return (
+      <>
+        <DesignCanvas>
+          <DCSection
+            id="cream"
+            title="Beans — Cream"
+            subtitle="Primary direction · warm cream + coral · Newsreader serif accents"
+          >
+            <DCArtboard id="today" label="01 · Today (chat)" width={390} height={844}>
+              <BeansApp themeName="cream" label="Cream · Today"/>
+            </DCArtboard>
+            <DCArtboard id="calendar" label="02 · Mood calendar" width={390} height={844}>
+              <BeansAppOnTab themeName="cream" tab="calendar" label="Cream · Calendar"/>
+            </DCArtboard>
+            <DCArtboard id="archive" label="03 · Entries" width={390} height={844}>
+              <BeansAppOnTab themeName="cream" tab="archive" label="Cream · Entries"/>
+            </DCArtboard>
+            <DCArtboard id="entry" label="04 · Entry detail" width={390} height={844}>
+              <BeansAppOnEntry themeName="cream" entryKey="2026-04-27" label="Cream · Entry detail"/>
+            </DCArtboard>
+            <DCArtboard id="insights" label="05 · Insights" width={390} height={844}>
+              <BeansAppOnTab themeName="cream" tab="insights" label="Cream · Insights"/>
+            </DCArtboard>
+            <DCArtboard id="settings" label="06 · Profile" width={390} height={844}>
+              <BeansAppOnTab themeName="cream" tab="settings" label="Cream · Profile"/>
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection
+            id="dusk"
+            title="Beans — Dusk"
+            subtitle="Dark mode · same warmth in low light · for late-night journaling"
+          >
+            <DCArtboard id="today-d" label="01 · Today" width={390} height={844}>
+              <BeansApp themeName="dusk" label="Dusk · Today"/>
+            </DCArtboard>
+            <DCArtboard id="calendar-d" label="02 · Mood calendar" width={390} height={844}>
+              <BeansAppOnTab themeName="dusk" tab="calendar" label="Dusk · Calendar"/>
+            </DCArtboard>
+            <DCArtboard id="insights-d" label="03 · Insights" width={390} height={844}>
+              <BeansAppOnTab themeName="dusk" tab="insights" label="Dusk · Insights"/>
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection
+            id="notebook"
+            title="Beans — Paper"
+            subtitle="Analog-feeling variant · ruled lines · serif AI replies feel like margin notes"
+          >
+            <DCArtboard id="today-n" label="01 · Today" width={390} height={844}>
+              <BeansApp themeName="notebook" label="Paper · Today"/>
+            </DCArtboard>
+            <DCArtboard id="entry-n" label="02 · Entry detail" width={390} height={844}>
+              <BeansAppOnEntry themeName="notebook" entryKey="2026-04-29" label="Paper · Entry detail"/>
+            </DCArtboard>
+            <DCArtboard id="archive-n" label="03 · Entries" width={390} height={844}>
+              <BeansAppOnTab themeName="notebook" tab="archive" label="Paper · Entries"/>
+            </DCArtboard>
+          </DCSection>
+
+          <DCPostIt top={20} left={20} rotate={-3} width={210}>
+            Tap any artboard to focus. The Today screen is fully interactive — pick a mood, write something, the AI replies.
+          </DCPostIt>
+        </DesignCanvas>
+
+        <TweaksPanel title="Tweaks">
+          <TweakSection title="View">
+            <TweakToggle
+              label="Show all variations"
+              value={tweaks.showAllVariations}
+              onChange={(v) => setTweak('showAllVariations', v)}
+            />
+          </TweakSection>
+          <TweakSection title="Single-app theme">
+            <TweakRadio
+              value={tweaks.primaryTheme}
+              onChange={(v) => setTweak('primaryTheme', v)}
+              options={[
+                { value: 'cream', label: 'Cream' },
+                { value: 'dusk', label: 'Dusk' },
+                { value: 'notebook', label: 'Paper' },
+              ]}
+            />
+          </TweakSection>
+        </TweaksPanel>
+      </>
+    );
+  }
+
+  // Helper variants of BeansApp pinned to a starting tab/entry — useful for
+  // showing a particular screen in an artboard without user interaction.
+  function BeansAppOnTab({ themeName, tab, label }) {
+    const ref = React.useRef(null);
+    return <PinnedBeansApp themeName={themeName} initialTab={tab} label={label}/>;
+  }
+  function BeansAppOnEntry({ themeName, entryKey, label }) {
+    return <PinnedBeansApp themeName={themeName} initialEntry={entryKey} label={label}/>;
+  }
+  function PinnedBeansApp({ themeName, initialTab = 'today', initialEntry = null, label }) {
+    const [tab, setTab] = React.useState(initialTab);
+    const [openEntry, setOpenEntry] = React.useState(initialEntry);
+    const theme = THEMES[themeName];
+    const goEntry = (k) => setOpenEntry(k);
+    const closeEntry = () => setOpenEntry(null);
+    let content;
+    if (openEntry) content = <ScreenEntry entryKey={openEntry} theme={theme} themeName={themeName} onBack={closeEntry}/>;
+    else if (tab === 'today') content = <ScreenToday theme={theme} themeName={themeName} onOpenEntry={goEntry} onNavigate={setTab}/>;
+    else if (tab === 'calendar') content = <ScreenCalendar theme={theme} themeName={themeName} onOpenEntry={goEntry}/>;
+    else if (tab === 'archive') content = <ScreenArchive theme={theme} themeName={themeName} onOpenEntry={goEntry}/>;
+    else if (tab === 'insights') content = <ScreenInsights theme={theme} themeName={themeName}/>;
+    else if (tab === 'settings') content = <ScreenSettings theme={theme} themeName={themeName}/>;
+    const isNotebook = themeName === 'notebook';
+    return (
+      <Phone theme={themeName} label={label}>
+        <StatusBar theme={themeName}/>
+        <div className={isNotebook ? 'beans-notebook-bg' : ''} style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+          {content}
+        </div>
+        {!openEntry && <TabBar active={tab} onChange={(id) => { setOpenEntry(null); setTab(id); }} theme={themeName}/>}
+        <HomeIndicator theme={themeName}/>
+      </Phone>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById('root')).render(<Root/>);
+</script>
+
+</body>
+</html>
