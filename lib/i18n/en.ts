@@ -90,13 +90,18 @@ export const en = {
   },
 
   login: {
-    tagline:          'Your daily mood & reflection space.',
-    emailPlaceholder: 'your@email.com',
-    sendButton:       'Send magic link',
-    sendingButton:    'Sending…',
-    checkEmailTitle:  'Check your email',
-    checkEmailBody:   (email: string) =>
-      `We sent a magic link to ${email}. Tap it to sign in — no password needed.`,
+    tagline:             'Your daily mood & reflection space.',
+    emailPlaceholder:    'your@email.com',
+    passwordPlaceholder: 'Password',
+    signInButton:        'Sign In',
+    signUpButton:        'Sign Up',
+    signingInButton:     'Signing in…',
+    signingUpButton:     'Signing up…',
+    switchToSignUp:      "Don't have an account? Sign up",
+    switchToSignIn:      'Already have an account? Sign in',
+    errorInvalidCredentials: 'Incorrect email or password.',
+    errorEmailInUse:     'An account with this email already exists.',
+    errorGeneric:        'Something went wrong. Please try again.',
   },
 
   entryDetail: {

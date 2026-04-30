@@ -92,13 +92,18 @@ export const zh = {
   },
 
   login: {
-    tagline:          '你的每日心情与反思空间。',
-    emailPlaceholder: '你的邮箱',
-    sendButton:       '发送魔法链接',
-    sendingButton:    '发送中…',
-    checkEmailTitle:  '查看你的邮件',
-    checkEmailBody:   (email: string) =>
-      `我们已向 ${email} 发送了一封魔法链接邮件，点击即可登录，无需密码。`,
+    tagline:             '你的每日心情与反思空间。',
+    emailPlaceholder:    '你的邮箱',
+    passwordPlaceholder: '密码',
+    signInButton:        '登录',
+    signUpButton:        '注册',
+    signingInButton:     '登录中…',
+    signingUpButton:     '注册中…',
+    switchToSignUp:      '没有账号？注册',
+    switchToSignIn:      '已有账号？登录',
+    errorInvalidCredentials: '邮箱或密码错误。',
+    errorEmailInUse:     '该邮箱已被注册。',
+    errorGeneric:        '出了点问题，请重试。',
   },
 
   entryDetail: {

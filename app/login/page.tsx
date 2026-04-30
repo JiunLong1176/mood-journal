@@ -1,24 +1,58 @@
 'use client';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase-browser';
 import { useTranslation } from '@/components/providers/LanguageProvider';
 
 export default function LoginPage() {
+  const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [email, setEmail] = useState('');
-  const [sent, setSent] = useState(false);
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const supabase = createClient();
+  const router = useRouter();
   const { t } = useTranslation();
+
+  const isSignUp = mode === 'signup';
+  const canSubmit = email && password && !loading;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    await supabase.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: `${location.origin}/auth/callback` },
-    });
-    setSent(true);
-    setLoading(false);
+    setError('');
+
+    if (isSignUp) {
+      const { error: err } = await supabase.auth.signUp({ email, password });
+      if (err) {
+        setError(
+          err.message.toLowerCase().includes('already')
+            ? t.login.errorEmailInUse
+            : t.login.errorGeneric
+        );
+        setLoading(false);
+        return;
+      }
+    } else {
+      const { error: err } = await supabase.auth.signInWithPassword({ email, password });
+      if (err) {
+        setError(
+          err.message.toLowerCase().includes('invalid')
+            ? t.login.errorInvalidCredentials
+            : t.login.errorGeneric
+        );
+        setLoading(false);
+        return;
+      }
+    }
+
+    router.push('/today');
+    router.refresh();
+  }
+
+  function switchMode() {
+    setMode(isSignUp ? 'signin' : 'signup');
+    setError('');
   }
 
   return (
@@ -37,49 +71,65 @@ export default function LoginPage() {
           {t.login.tagline}
         </p>
 
-        {sent ? (
-          <div style={{
-            background: '#fff', border: '1px solid rgba(42,36,30,0.08)',
-            borderRadius: 16, padding: 24, textAlign: 'center',
-          }}>
-            <div style={{ fontSize: 36, marginBottom: 12 }}>📬</div>
-            <div style={{ fontSize: 16, fontWeight: 500, color: '#2A241E', marginBottom: 6 }}>
-              {t.login.checkEmailTitle}
-            </div>
-            <div style={{ fontSize: 14, color: '#6B5F52' }}>
-              {t.login.checkEmailBody(email)}
-            </div>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <input
-              type="email"
-              placeholder={t.login.emailPlaceholder}
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              required
-              style={{
-                padding: '14px 16px', borderRadius: 14, fontSize: 16,
-                border: '1px solid rgba(42,36,30,0.12)',
-                background: '#fff', color: '#2A241E', outline: 'none',
-                fontFamily: 'inherit',
-              }}
-            />
-            <button
-              type="submit"
-              disabled={loading || !email}
-              style={{
-                padding: '14px 16px', borderRadius: 14, fontSize: 15, fontWeight: 600,
-                background: loading || !email ? '#E0D8CE' : '#D97757',
-                color: loading || !email ? '#A89B8B' : '#fff',
-                border: 'none', cursor: loading || !email ? 'default' : 'pointer',
-                fontFamily: 'inherit', transition: 'background .15s',
-              }}
-            >
-              {loading ? t.login.sendingButton : t.login.sendButton}
-            </button>
-          </form>
-        )}
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <input
+            type="email"
+            placeholder={t.login.emailPlaceholder}
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            required
+            style={{
+              padding: '14px 16px', borderRadius: 14, fontSize: 16,
+              border: '1px solid rgba(42,36,30,0.12)',
+              background: '#fff', color: '#2A241E', outline: 'none',
+              fontFamily: 'inherit',
+            }}
+          />
+          <input
+            type="password"
+            placeholder={t.login.passwordPlaceholder}
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            required
+            style={{
+              padding: '14px 16px', borderRadius: 14, fontSize: 16,
+              border: '1px solid rgba(42,36,30,0.12)',
+              background: '#fff', color: '#2A241E', outline: 'none',
+              fontFamily: 'inherit',
+            }}
+          />
+          {error && (
+            <p style={{ fontSize: 13, color: '#C0392B', margin: 0 }}>{error}</p>
+          )}
+          <button
+            type="submit"
+            disabled={!canSubmit}
+            style={{
+              padding: '14px 16px', borderRadius: 14, fontSize: 15, fontWeight: 600,
+              background: !canSubmit ? '#E0D8CE' : '#D97757',
+              color: !canSubmit ? '#A89B8B' : '#fff',
+              border: 'none', cursor: !canSubmit ? 'default' : 'pointer',
+              fontFamily: 'inherit', transition: 'background .15s',
+            }}
+          >
+            {loading
+              ? (isSignUp ? t.login.signingUpButton : t.login.signingInButton)
+              : (isSignUp ? t.login.signUpButton : t.login.signInButton)
+            }
+          </button>
+        </form>
+
+        <p style={{ textAlign: 'center', marginTop: 20, fontSize: 14, color: '#6B5F52' }}>
+          <button
+            onClick={switchMode}
+            style={{
+              background: 'none', border: 'none', color: '#D97757',
+              cursor: 'pointer', fontSize: 14, fontFamily: 'inherit', padding: 0,
+            }}
+          >
+            {isSignUp ? t.login.switchToSignIn : t.login.switchToSignUp}
+          </button>
+        </p>
       </div>
     </div>
   );
