@@ -23,8 +23,14 @@ export async function proxy(request: NextRequest) {
     }
   );
 
-  // Refresh session so server-side getUser() works correctly
-  await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  const { pathname } = request.nextUrl;
+  const isAuthRoute = pathname.startsWith('/login') || pathname.startsWith('/auth') || pathname.startsWith('/reset-password') || pathname.startsWith('/forgot-password');
+
+  if (!user && !isAuthRoute) {
+    return NextResponse.redirect(new URL('/login', request.url));
+  }
 
   return supabaseResponse;
 }
