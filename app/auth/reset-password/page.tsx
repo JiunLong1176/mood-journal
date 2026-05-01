@@ -1,10 +1,11 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase-browser';
 import { useTranslation } from '@/components/providers/LanguageProvider';
 
 export default function ResetPasswordPage() {
+  const [ready, setReady] = useState(false);
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [loading, setLoading] = useState(false);
@@ -14,7 +15,26 @@ export default function ResetPasswordPage() {
   const router = useRouter();
   const { t } = useTranslation();
 
-  const canSubmit = password && confirm && !loading;
+  useEffect(() => {
+    // Implicit flow: Supabase fires PASSWORD_RECOVERY when it detects the hash tokens
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') setReady(true);
+    });
+
+    // PKCE flow fallback: exchange code query param for session
+    const code = new URLSearchParams(window.location.search).get('code');
+    if (code) {
+      supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
+        if (error) setError(t.resetPassword.errorGeneric);
+        else setReady(true);
+      });
+    }
+
+    return () => subscription.unsubscribe();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const canSubmit = password && confirm && !loading && ready;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

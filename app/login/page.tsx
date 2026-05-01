@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase-browser';
 import { useTranslation } from '@/components/providers/LanguageProvider';
@@ -10,9 +10,16 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const supabase = createClient();
   const router = useRouter();
+  const supabase = createClient();
   const { t } = useTranslation();
+
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash.includes('type=recovery')) {
+      router.replace('/auth/reset-password' + hash);
+    }
+  }, [router]);
 
   const isSignUp = mode === 'signup';
   const canSubmit = email && password && !loading;
