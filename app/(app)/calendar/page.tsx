@@ -5,11 +5,11 @@ import { useTheme } from '@/components/providers/ThemeProvider';
 import { useTranslation } from '@/components/providers/LanguageProvider';
 import Header from '@/components/ui/Header';
 import { MOODS, MOOD_BY_KEY } from '@/lib/moods';
-import { getAllEntries, type Entry } from '@/lib/storage';
-
 function dayKey(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
+
+type Entry = { date: string; mood: string; messages: unknown[] };
 
 export default function CalendarPage() {
   const { theme } = useTheme();
@@ -20,7 +20,9 @@ export default function CalendarPage() {
   });
   const [entries, setEntries] = useState<Entry[]>([]);
 
-  useEffect(() => { setEntries(getAllEntries()); }, []);
+  useEffect(() => {
+    fetch('/api/entries').then(r => r.json()).then(data => { if (Array.isArray(data)) setEntries(data); });
+  }, []);
 
   const entriesByDate = Object.fromEntries(entries.map(e => [e.date, e]));
   const today = new Date();

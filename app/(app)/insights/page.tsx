@@ -5,7 +5,7 @@ import { useTranslation } from '@/components/providers/LanguageProvider';
 import Header from '@/components/ui/Header';
 import { MOODS } from '@/lib/moods';
 import type { MoodKey } from '@/lib/moods';
-import { getAllEntries, type Entry } from '@/lib/storage';
+type Entry = { date: string; mood: string; messages: { from: string; text: string }[] };
 
 function dayKey(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -16,7 +16,9 @@ export default function InsightsPage() {
   const { t } = useTranslation();
   const [entries, setEntries] = useState<Entry[]>([]);
 
-  useEffect(() => { setEntries(getAllEntries()); }, []);
+  useEffect(() => {
+    fetch('/api/entries').then(r => r.json()).then(data => { if (Array.isArray(data)) setEntries(data); });
+  }, []);
 
   const today = new Date();
   const last30 = entries.filter(e => {
