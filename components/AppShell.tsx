@@ -8,8 +8,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
     // Full-screen on mobile; centered card on desktop
     <div style={{
-      minHeight: '100dvh',
-      background: '#E5DDD4', // neutral canvas behind card on desktop
+      height: '100dvh',
+      overflow: 'hidden',
+      background: '#E5DDD4',
       display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
     }}>
       <div style={{

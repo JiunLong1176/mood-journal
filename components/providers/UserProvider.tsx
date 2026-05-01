@@ -1,5 +1,7 @@
 'use client';
-import { createContext, useContext } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase-browser';
 
 interface UserContextValue {
   email: string;
@@ -15,21 +17,24 @@ const UserContext = createContext<UserContextValue>({
   createdAt: '',
 });
 
-export function UserProvider({
-  initialUser,
-  children,
-}: {
-  initialUser: { email: string; createdAt: string };
-  children: React.ReactNode;
-}) {
-  const username = initialUser.email.split('@')[0];
-  const avatarLetter = username[0]?.toUpperCase() ?? '?';
+export function UserProvider({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
+  const [user, setUser] = useState<UserContextValue>({ email: '', username: '', avatarLetter: '?', createdAt: '' });
 
-  return (
-    <UserContext.Provider value={{ email: initialUser.email, username, avatarLetter, createdAt: initialUser.createdAt }}>
-      {children}
-    </UserContext.Provider>
-  );
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) {
+        router.replace('/login');
+        return;
+      }
+      const email = session.user.email ?? '';
+      const username = email.split('@')[0];
+      setUser({ email, username, avatarLetter: username[0]?.toUpperCase() ?? '?', createdAt: session.user.created_at });
+    });
+  }, []);
+
+  return <UserContext.Provider value={user}>{children}</UserContext.Provider>;
 }
 
 export function useUser() {
