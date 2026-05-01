@@ -21,7 +21,7 @@ export default function TabBar({ theme }: { theme: Theme }) {
       flexShrink: 0,
       borderTop: `1px solid ${theme.line}`,
       background: theme.bg,
-      paddingTop: 10, paddingBottom: 4,
+      paddingTop: 10, paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 4px)',
       display: 'flex', justifyContent: 'space-around',
     }}>
       {TABS.map(tab => {
