@@ -11,13 +11,61 @@ function dayKey(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
+function SkeletonBlock({ width, height, borderRadius = 6, theme }: {
+  width: string | number; height: number; borderRadius?: number; theme: any;
+}) {
+  return (
+    <div
+      className="animate-shimmer"
+      style={{
+        width, height, borderRadius, flexShrink: 0,
+        background: `linear-gradient(90deg, ${theme.surfaceAlt} 25%, ${theme.surface} 50%, ${theme.surfaceAlt} 75%)`,
+        backgroundSize: '200% 100%',
+      }}
+    />
+  );
+}
+
+function SkeletonInsights({ theme }: { theme: any }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <div style={{ borderRadius: 20, padding: 20, background: theme.surfaceAlt, display: 'flex', alignItems: 'center', gap: 16 }}>
+        <SkeletonBlock width={56} height={56} borderRadius={28} theme={theme} />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
+          <SkeletonBlock width={80} height={10} borderRadius={4} theme={theme} />
+          <SkeletonBlock width={140} height={22} borderRadius={4} theme={theme} />
+          <SkeletonBlock width={100} height={11} borderRadius={4} theme={theme} />
+        </div>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+        {[0, 1].map(i => (
+          <div key={i} style={{ background: theme.surface, border: `1px solid ${theme.line}`, borderRadius: 16, padding: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <SkeletonBlock width={60} height={10} borderRadius={4} theme={theme} />
+            <SkeletonBlock width={50} height={28} borderRadius={4} theme={theme} />
+          </div>
+        ))}
+      </div>
+      {[100, 80, 60].map((h, i) => (
+        <div key={i} style={{ background: theme.surface, border: `1px solid ${theme.line}`, borderRadius: 16, padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <SkeletonBlock width={120} height={14} borderRadius={4} theme={theme} />
+          <SkeletonBlock width="100%" height={h} borderRadius={8} theme={theme} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function InsightsPage() {
   const { theme } = useTheme();
   const { t } = useTranslation();
   const [entries, setEntries] = useState<Entry[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/entries').then(r => r.json()).then(data => { if (Array.isArray(data)) setEntries(data); });
+    fetch('/api/entries')
+      .then(r => r.json())
+      .then(data => { if (Array.isArray(data)) setEntries(data); setLoading(false); })
+      .catch(() => setLoading(false));
   }, []);
 
   const today = new Date();
@@ -63,85 +111,86 @@ export default function InsightsPage() {
   const dowAvg = dows.map((s, i) => dowCount[i] ? s / dowCount[i] : 0);
   const dowMax = Math.max(...dowAvg, 1);
 
-  if (entries.length === 0) return (
-    <>
-      <Header theme={theme} title={t.insights.title} subtitle={t.insights.subtitle} />
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 32, textAlign: 'center' }}>
-        <div className="font-display" style={{ fontSize: 18, fontStyle: 'italic', color: theme.inkSoft, maxWidth: 240, lineHeight: 1.4 }}>
-          {t.insights.emptyState}
-        </div>
-      </div>
-    </>
-  );
-
   return (
     <>
       <Header theme={theme} title={t.insights.title} subtitle={t.insights.subtitle} />
-      <div style={{ flex: 1, overflowY: 'auto', padding: '0 20px 20px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-        <div style={{ background: theme.accent, color: '#fff', borderRadius: 20, padding: 20, display: 'flex', alignItems: 'center', gap: 16 }}>
-          <div style={{ fontSize: 56, lineHeight: 1 }}>{topMood.emoji}</div>
-          <div>
-            <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: 0.6, textTransform: 'uppercase', opacity: .8 }}>{t.insights.mostly}</div>
-            <div className="font-display" style={{ fontSize: 30, fontWeight: 500, letterSpacing: -0.6, lineHeight: 1.05 }}>{t.insights.daysLabel(t.moods[topMood.key as MoodKey])}</div>
-            <div style={{ fontSize: 13, opacity: .85, marginTop: 2 }}>{t.insights.ofLast(moodCount[topMood.key] ?? 0, total)}</div>
-          </div>
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-          <StatCard theme={theme} label={t.insights.streakLabel} value={streak} unit={t.insights.streakUnit(streak)} icon="🔥" />
-          <StatCard theme={theme} label={t.insights.totalLabel} value={entries.length} unit={t.insights.totalUnit} icon="📝" />
-        </div>
-
-        <Card theme={theme} title={t.insights.moodBreakdown}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {MOODS.map(m => {
-              const c = moodCount[m.key] || 0;
-              const pct = total ? (c / total) * 100 : 0;
-              return (
-                <div key={m.key} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <span style={{ fontSize: 18, width: 22 }}>{m.emoji}</span>
-                  <div style={{ flex: 1, height: 8, background: theme.surfaceAlt, borderRadius: 4, overflow: 'hidden' }}>
-                    <div style={{ width: pct + '%', height: '100%', background: m.color, transition: 'width .4s' }} />
-                  </div>
-                  <span className="font-mono" style={{ fontSize: 11, color: theme.inkSoft, minWidth: 28, textAlign: 'right' }}>{c}</span>
-                </div>
-              );
-            })}
-          </div>
-        </Card>
-
-        <Card theme={theme} title={t.insights.byDayOfWeek} subtitle={t.insights.byDaySubtitle}>
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, height: 100, marginTop: 4 }}>
-            {t.insights.weekdays.map((w, i) => {
-              const v = dowAvg[i];
-              const h = (v / dowMax) * 84;
-              const hue = v >= 4 ? theme.sage : v >= 3 ? theme.accent : theme.inkFaint;
-              return (
-                <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-                  <div style={{ flex: 1, width: '100%', display: 'flex', alignItems: 'flex-end' }}>
-                    <div style={{ width: '100%', height: h, background: hue, borderRadius: 6, opacity: v ? 1 : .15, transition: 'height .4s' }} />
-                  </div>
-                  <span className="font-mono" style={{ fontSize: 10, color: theme.inkFaint, fontWeight: 600 }}>{w}</span>
-                </div>
-              );
-            })}
-          </div>
-        </Card>
-
-        {words.length > 0 && (
-          <Card theme={theme} title={t.insights.wordCloud}>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 10px', alignItems: 'baseline', paddingTop: 4 }}>
-              {words.map(([w, c]) => {
-                const ratio = c / maxF;
-                return (
-                  <span key={w} className="font-display" style={{
-                    fontSize: 12 + ratio * 16, color: theme.ink, opacity: 0.5 + ratio * 0.5,
-                    fontWeight: ratio > 0.6 ? 500 : 400, fontStyle: ratio > 0.4 ? 'italic' : 'normal', letterSpacing: -0.3,
-                  }}>{w}</span>
-                );
-              })}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '0 20px 20px' }}>
+        {loading ? (
+          <SkeletonInsights theme={theme} />
+        ) : entries.length === 0 ? (
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 32, textAlign: 'center', height: '100%' }}>
+            <div className="font-display" style={{ fontSize: 18, fontStyle: 'italic', color: theme.inkSoft, maxWidth: 240, lineHeight: 1.4 }}>
+              {t.insights.emptyState}
             </div>
-          </Card>
+          </div>
+        ) : (
+          <div className="animate-fadein" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ background: theme.accent, color: '#fff', borderRadius: 20, padding: 20, display: 'flex', alignItems: 'center', gap: 16 }}>
+              <div style={{ fontSize: 56, lineHeight: 1 }}>{topMood.emoji}</div>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: 0.6, textTransform: 'uppercase', opacity: .8 }}>{t.insights.mostly}</div>
+                <div className="font-display" style={{ fontSize: 30, fontWeight: 500, letterSpacing: -0.6, lineHeight: 1.05 }}>{t.insights.daysLabel(t.moods[topMood.key as MoodKey])}</div>
+                <div style={{ fontSize: 13, opacity: .85, marginTop: 2 }}>{t.insights.ofLast(moodCount[topMood.key] ?? 0, total)}</div>
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <StatCard theme={theme} label={t.insights.streakLabel} value={streak} unit={t.insights.streakUnit(streak)} icon="🔥" />
+              <StatCard theme={theme} label={t.insights.totalLabel} value={entries.length} unit={t.insights.totalUnit} icon="📝" />
+            </div>
+
+            <Card theme={theme} title={t.insights.moodBreakdown}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {MOODS.map(m => {
+                  const c = moodCount[m.key] || 0;
+                  const pct = total ? (c / total) * 100 : 0;
+                  return (
+                    <div key={m.key} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <span style={{ fontSize: 18, width: 22 }}>{m.emoji}</span>
+                      <div style={{ flex: 1, height: 8, background: theme.surfaceAlt, borderRadius: 4, overflow: 'hidden' }}>
+                        <div style={{ width: pct + '%', height: '100%', background: m.color, transition: 'width .4s' }} />
+                      </div>
+                      <span className="font-mono" style={{ fontSize: 11, color: theme.inkSoft, minWidth: 28, textAlign: 'right' }}>{c}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </Card>
+
+            <Card theme={theme} title={t.insights.byDayOfWeek} subtitle={t.insights.byDaySubtitle}>
+              <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, height: 100, marginTop: 4 }}>
+                {t.insights.weekdays.map((w, i) => {
+                  const v = dowAvg[i];
+                  const h = (v / dowMax) * 84;
+                  const hue = v >= 4 ? theme.sage : v >= 3 ? theme.accent : theme.inkFaint;
+                  return (
+                    <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                      <div style={{ flex: 1, width: '100%', display: 'flex', alignItems: 'flex-end' }}>
+                        <div style={{ width: '100%', height: h, background: hue, borderRadius: 6, opacity: v ? 1 : .15, transition: 'height .4s' }} />
+                      </div>
+                      <span className="font-mono" style={{ fontSize: 10, color: theme.inkFaint, fontWeight: 600 }}>{w}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </Card>
+
+            {words.length > 0 && (
+              <Card theme={theme} title={t.insights.wordCloud}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 10px', alignItems: 'baseline', paddingTop: 4 }}>
+                  {words.map(([w, c]) => {
+                    const ratio = c / maxF;
+                    return (
+                      <span key={w} className="font-display" style={{
+                        fontSize: 12 + ratio * 16, color: theme.ink, opacity: 0.5 + ratio * 0.5,
+                        fontWeight: ratio > 0.6 ? 500 : 400, fontStyle: ratio > 0.4 ? 'italic' : 'normal', letterSpacing: -0.3,
+                      }}>{w}</span>
+                    );
+                  })}
+                </div>
+              </Card>
+            )}
+          </div>
         )}
       </div>
     </>

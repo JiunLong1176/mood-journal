@@ -9,7 +9,7 @@ function dayKey(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-type Entry = { date: string; mood: string; messages: unknown[] };
+type Entry = { date: string; mood: string; messages: { from: string; text: string; time: string }[] };
 
 export default function CalendarPage() {
   const { theme } = useTheme();
@@ -21,7 +21,7 @@ export default function CalendarPage() {
   const [entries, setEntries] = useState<Entry[]>([]);
 
   useEffect(() => {
-    fetch('/api/entries').then(r => r.json()).then(data => { if (Array.isArray(data)) setEntries(data); });
+    fetch('/api/entries').then(r => r.json()).then(data => { if (Array.isArray(data)) setEntries(data); }).catch(() => {});
   }, []);
 
   const entriesByDate = Object.fromEntries(entries.map(e => [e.date, e]));
