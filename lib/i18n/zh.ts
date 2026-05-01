@@ -104,6 +104,18 @@ export const zh = {
     errorInvalidCredentials: '邮箱或密码错误。',
     errorEmailInUse:     '该邮箱已被注册。',
     errorGeneric:        '出了点问题，请重试。',
+    forgotPassword:      '忘记密码？',
+  },
+
+  resetPassword: {
+    title:           '重置密码',
+    newPassword:     '新密码',
+    confirmPassword: '确认密码',
+    submitButton:    '更新密码',
+    submittingButton: '更新中…',
+    errorMismatch:   '两次密码不一致。',
+    errorGeneric:    '出了点问题，请重试。',
+    successMessage:  '密码已更新！正在跳转…',
   },
 
   entryDetail: {

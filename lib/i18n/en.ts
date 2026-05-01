@@ -102,6 +102,18 @@ export const en = {
     errorInvalidCredentials: 'Incorrect email or password.',
     errorEmailInUse:     'An account with this email already exists.',
     errorGeneric:        'Something went wrong. Please try again.',
+    forgotPassword:      'Forgot password?',
+  },
+
+  resetPassword: {
+    title:           'Reset password',
+    newPassword:     'New password',
+    confirmPassword: 'Confirm password',
+    submitButton:    'Update password',
+    submittingButton: 'Updating…',
+    errorMismatch:   'Passwords do not match.',
+    errorGeneric:    'Something went wrong. Please try again.',
+    successMessage:  'Password updated! Redirecting…',
   },
 
   entryDetail: {
