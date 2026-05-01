@@ -105,6 +105,17 @@ export const en = {
     forgotPassword:      'Forgot password?',
   },
 
+  forgotPasswordPage: {
+    title:            'Forgot password?',
+    subtitle:         'Enter your email and we\'ll send you a reset link.',
+    emailPlaceholder: 'your@email.com',
+    submitButton:     'Send reset link',
+    submittingButton: 'Sending…',
+    successMessage:   'Check your inbox for a password reset link.',
+    backToSignIn:     'Back to sign in',
+    errorGeneric:     'Something went wrong. Please try again.',
+  },
+
   resetPassword: {
     title:           'Reset password',
     newPassword:     'New password',

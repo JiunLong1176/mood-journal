@@ -105,6 +105,20 @@ export default function LoginPage() {
               fontFamily: 'inherit',
             }}
           />
+          {!isSignUp && (
+            <div style={{ textAlign: 'right', marginTop: -4 }}>
+              <button
+                type="button"
+                onClick={() => router.push('/auth/forgot-password')}
+                style={{
+                  background: 'none', border: 'none', color: '#D97757',
+                  cursor: 'pointer', fontSize: 13, fontFamily: 'inherit', padding: 0,
+                }}
+              >
+                {t.login.forgotPassword}
+              </button>
+            </div>
+          )}
           {error && (
             <p style={{ fontSize: 13, color: '#C0392B', margin: 0 }}>{error}</p>
           )}

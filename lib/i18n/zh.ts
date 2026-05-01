@@ -107,6 +107,17 @@ export const zh = {
     forgotPassword:      '忘记密码？',
   },
 
+  forgotPasswordPage: {
+    title:            '忘记密码？',
+    subtitle:         '输入邮箱，我们将发送重置链接。',
+    emailPlaceholder: '你的邮箱',
+    submitButton:     '发送重置链接',
+    submittingButton: '发送中…',
+    successMessage:   '请查收邮件中的重置链接。',
+    backToSignIn:     '返回登录',
+    errorGeneric:     '出了点问题，请重试。',
+  },
+
   resetPassword: {
     title:           '重置密码',
     newPassword:     '新密码',
