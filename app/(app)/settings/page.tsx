@@ -13,7 +13,7 @@ const THEME_OPTIONS: { key: ThemeName; bg: string; circleBorder: string; labelCo
   { key: 'notebook', bg: '#FAF6EC', circleBorder: 'rgba(0,0,0,0.18)',    labelColor: '#6B5F52' },
 ];
 
-const AI_TONE_KEYS = ['friend', 'reflective', 'quiet'] as const;
+const AI_TONE_KEYS = ['friend', 'reflective', 'spark', 'quiet'] as const;
 
 function dateKey(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;

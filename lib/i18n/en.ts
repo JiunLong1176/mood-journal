@@ -79,6 +79,7 @@ export const en = {
     aiTones: {
       friend:     { label: 'Like a friend',  desc: 'Warm, validating, brief' },
       reflective: { label: 'Reflective',     desc: 'Mirrors back themes' },
+      spark:      { label: 'Spark ✨',        desc: 'Energetic, hyped, uses emojis' },
       quiet:      { label: 'Quiet mode',     desc: 'No replies — just write' },
     } as Record<string, { label: string; desc: string }>,
     reminderTitle: 'Daily reminder',

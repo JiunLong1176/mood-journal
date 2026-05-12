@@ -81,6 +81,7 @@ export const zh = {
     aiTones: {
       friend:     { label: '像朋友一样',  desc: '温暖、支持、简短' },
       reflective: { label: '反思型',      desc: '回应你写作中的主题' },
+      spark:      { label: 'Spark ✨',    desc: '充满活力，热情，带表情符号' },
       quiet:      { label: '安静模式',    desc: '不回复 — 只是写' },
     } as Record<string, { label: string; desc: string }>,
     reminderTitle: '每日提醒',
