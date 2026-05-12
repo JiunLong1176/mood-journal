@@ -26,7 +26,7 @@ function SkeletonBlock({ width, height, borderRadius = 6, theme }: {
 function SkeletonCard({ theme }: { theme: any }) {
   return (
     <div style={{
-      background: theme.surfaceAlt,
+      background: theme.surface,
       border: `1px solid ${theme.line}`,
       borderRadius: 14, padding: 14,
       display: 'flex', gap: 12, alignItems: 'flex-start',
