@@ -128,6 +128,13 @@ export default function TodayPage() {
         padding: '8px 16px 12px',
         display: 'flex', flexDirection: 'column', gap: 8,
       }}>
+        {!loaded && (
+          <>
+            <SkeletonBubble align="right" width="62%" inkFaint={theme.inkFaint} />
+            <SkeletonBubble align="left"  width="72%" inkFaint={theme.inkFaint} />
+            <SkeletonBubble align="right" width="42%" inkFaint={theme.inkFaint} />
+          </>
+        )}
         {loaded && messages.length === 0 && !mood && (
           <EmptyHint theme={theme} text={t.today.hintNone} />
         )}
@@ -191,6 +198,17 @@ export default function TodayPage() {
         </div>
       </div>
     </>
+  );
+}
+
+function SkeletonBubble({ align, width, inkFaint }: { align: 'left' | 'right'; width: string; inkFaint: string }) {
+  return (
+    <div style={{ display: 'flex', justifyContent: align === 'right' ? 'flex-end' : 'flex-start', marginTop: 4 }}>
+      <div className="animate-shimmer" style={{
+        width, height: 40, borderRadius: 20,
+        background: inkFaint, opacity: 0.35,
+      }} />
+    </div>
   );
 }
 

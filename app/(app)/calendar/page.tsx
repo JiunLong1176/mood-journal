@@ -19,9 +19,10 @@ export default function CalendarPage() {
     return new Date(now.getFullYear(), now.getMonth(), 1);
   });
   const [entries, setEntries] = useState<Entry[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/entries').then(r => r.json()).then(data => { if (Array.isArray(data)) setEntries(data); }).catch(() => {});
+    fetch('/api/entries').then(r => r.json()).then(data => { if (Array.isArray(data)) setEntries(data); }).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
   const entriesByDate = Object.fromEntries(entries.map(e => [e.date, e]));
@@ -63,7 +64,13 @@ export default function CalendarPage() {
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}>
-          {cells.map((d, i) => {
+          {loading && Array.from({ length: 35 }).map((_, i) => (
+            <div key={i} className="animate-shimmer" style={{
+              aspectRatio: '1', borderRadius: 12,
+              background: theme.inkFaint, opacity: 0.25,
+            }} />
+          ))}
+          {!loading && cells.map((d, i) => {
             if (!d) return <div key={i} style={{ aspectRatio: '1' }} />;
             const k = dayKey(d);
             const entry = entriesByDate[k];
@@ -93,6 +100,7 @@ export default function CalendarPage() {
               ? <Link key={i} href={`/archive/${k}`} style={{ textDecoration: 'none' }}>{cell}</Link>
               : <div key={i}>{cell}</div>;
           })}
+
         </div>
 
         <div style={{ marginTop: 24, background: theme.surface, borderRadius: 16, padding: 16, border: `1px solid ${theme.line}` }}>
