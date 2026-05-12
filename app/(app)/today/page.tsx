@@ -130,9 +130,9 @@ export default function TodayPage() {
       }}>
         {!loaded && (
           <>
-            <SkeletonBubble align="right" width="62%" inkFaint={theme.inkFaint} />
-            <SkeletonBubble align="left"  width="72%" inkFaint={theme.inkFaint} />
-            <SkeletonBubble align="right" width="42%" inkFaint={theme.inkFaint} />
+            <SkeletonBubble align="right" width="62%" theme={theme} />
+            <SkeletonBubble align="left"  width="72%" theme={theme} />
+            <SkeletonBubble align="right" width="42%" theme={theme} />
           </>
         )}
         {loaded && messages.length === 0 && !mood && (
@@ -201,12 +201,13 @@ export default function TodayPage() {
   );
 }
 
-function SkeletonBubble({ align, width, inkFaint }: { align: 'left' | 'right'; width: string; inkFaint: string }) {
+function SkeletonBubble({ align, width, theme }: { align: 'left' | 'right'; width: string; theme: any }) {
   return (
     <div style={{ display: 'flex', justifyContent: align === 'right' ? 'flex-end' : 'flex-start', marginTop: 4 }}>
       <div className="animate-shimmer" style={{
-        width, height: 40, borderRadius: 20,
-        background: inkFaint, opacity: 0.35,
+        width, height: 40, borderRadius: 20, flexShrink: 0,
+        background: `linear-gradient(90deg, ${theme.surfaceAlt} 25%, ${theme.surface} 50%, ${theme.surfaceAlt} 75%)`,
+        backgroundSize: '200% 100%',
       }} />
     </div>
   );

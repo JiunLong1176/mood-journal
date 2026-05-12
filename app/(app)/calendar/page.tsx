@@ -66,8 +66,9 @@ export default function CalendarPage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}>
           {loading && Array.from({ length: 35 }).map((_, i) => (
             <div key={i} className="animate-shimmer" style={{
-              aspectRatio: '1', borderRadius: 12,
-              background: theme.inkFaint, opacity: 0.25,
+              aspectRatio: '1', borderRadius: 12, flexShrink: 0,
+              background: `linear-gradient(90deg, ${theme.surfaceAlt} 25%, ${theme.surface} 50%, ${theme.surfaceAlt} 75%)`,
+              backgroundSize: '200% 100%',
             }} />
           ))}
           {!loading && cells.map((d, i) => {
