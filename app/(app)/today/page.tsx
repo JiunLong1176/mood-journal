@@ -205,7 +205,7 @@ function SkeletonBubble({ align, width, theme }: { align: 'left' | 'right'; widt
   return (
     <div style={{ display: 'flex', justifyContent: align === 'right' ? 'flex-end' : 'flex-start', marginTop: 4 }}>
       <div className="animate-shimmer" style={{
-        width, height: 40, borderRadius: 20, flexShrink: 0,
+        width, height: 60, borderRadius: 20, flexShrink: 0,
         background: `linear-gradient(90deg, ${theme.surfaceAlt} 25%, ${theme.surface} 50%, ${theme.surfaceAlt} 75%)`,
         backgroundSize: '200% 100%',
       }} />
