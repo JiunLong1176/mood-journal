@@ -24,6 +24,12 @@ export const en = {
     placeholderMood:   "What's on your mind?",
     placeholderNoMood: 'Pick a mood first…',
     fallbackReply:     'Thanks for sharing this with me.',
+    pastDateBanner:    'Viewing a past entry',
+    backToToday:       'Back to today',
+    unsavedWarning:    'You have unsent text. Switch dates anyway?',
+    pickDate:          'Pick a date',
+    cancel:            'Cancel',
+    confirm:           'Confirm',
   },
 
   archive: {

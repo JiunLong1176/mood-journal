@@ -13,6 +13,11 @@ function todayKey() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
+function parseDateKey(key: string): Date {
+  const [y, m, d] = key.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+
 export default function TodayPage() {
   const { theme, themeName } = useTheme();
   const { username, avatarLetter } = useUser();
@@ -23,31 +28,53 @@ export default function TodayPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [aiTyping, setAiTyping] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<string>(todayKey());
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [pickerValue, setPickerValue] = useState<string>(todayKey());
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const today = new Date();
   const dateLocale = language === 'zh' ? 'zh-CN' : 'en-US';
-  const todayLabel = today.toLocaleDateString(dateLocale, { weekday: 'long', month: 'long', day: 'numeric' });
-  const hour = today.getHours();
+  const selectedDateLabel = parseDateKey(selectedDate).toLocaleDateString(dateLocale, { weekday: 'long', month: 'long', day: 'numeric' });
+  const hour = new Date().getHours();
 
-  // Load today's existing entry from Supabase
-  useEffect(() => {
-    fetch(`/api/entries?date=${todayKey()}`)
+  function loadEntry(date: string) {
+    setLoaded(false);
+    fetch(`/api/entries?date=${date}`)
       .then(r => r.json())
       .then(entry => {
-        if (entry) {
+        if (entry && entry.mood) {
           setMood(entry.mood as MoodKey);
           setMessages(entry.messages);
+        } else {
+          setMood(null);
+          setMessages([]);
         }
       })
       .catch(() => {})
       .finally(() => setLoaded(true));
+  }
+
+  useEffect(() => {
+    loadEntry(selectedDate);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages, aiTyping]);
+
+  function handleDateChange(newDate: string) {
+    if (draft.trim().length > 0) {
+      if (!window.confirm(t.today.unsavedWarning)) return;
+    }
+    setSelectedDate(newDate);
+    setMood(null);
+    setMessages([]);
+    setDraft('');
+    setShowDatePicker(false);
+    loadEntry(newDate);
+  }
 
   async function send() {
     const text = draft.trim();
@@ -61,7 +88,6 @@ export default function TodayPage() {
     if (textareaRef.current) { textareaRef.current.style.height = 'auto'; }
     setAiTyping(true);
 
-    // Get AI reply (skip if quiet mode)
     const tone = localStorage.getItem('beans_ai_tone') ?? 'friend';
     let reply = '';
     if (tone !== 'quiet') {
@@ -82,26 +108,40 @@ export default function TodayPage() {
       : [...updatedMessages, { from: 'ai' as const, text: reply || t.today.fallbackReply, time }];
     setMessages(finalMessages);
 
-    // Save to Supabase
     fetch('/api/entries', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ date: todayKey(), mood, messages: finalMessages }),
+      body: JSON.stringify({ date: selectedDate, mood, messages: finalMessages }),
     }).catch(() => {});
   }
 
   const moodObj = mood ? MOOD_BY_KEY[mood] : null;
   const canSend = !!mood && draft.trim().length > 0;
+  const isPastDate = selectedDate !== todayKey();
 
   return (
     <>
       {/* Header */}
       <div style={{ padding: '12px 20px 12px', flexShrink: 0 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 14 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: isPastDate ? 10 : 14 }}>
           <div>
-            <div className="font-mono" style={{ fontSize: 11, color: theme.inkFaint, letterSpacing: 0.6, textTransform: 'uppercase', marginBottom: 4 }}>
-              {todayLabel}
-            </div>
+            <button
+              onClick={() => {
+                if (!aiTyping) {
+                  setPickerValue(selectedDate);
+                  setShowDatePicker(true);
+                }
+              }}
+              style={{ background: 'none', border: 'none', cursor: aiTyping ? 'default' : 'pointer', padding: 0, textAlign: 'left' }}
+            >
+              <div className="font-mono" style={{ fontSize: 11, color: theme.inkFaint, letterSpacing: 0.6, textTransform: 'uppercase', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
+                {selectedDateLabel}
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: aiTyping ? 0.3 : 0.6 }}>
+                  <rect x="1" y="2" width="8" height="7" rx="1.5" />
+                  <path d="M3 1v2M7 1v2M1 5h8" />
+                </svg>
+              </div>
+            </button>
             <div className="font-display" style={{ fontSize: 28, fontWeight: 500, letterSpacing: -0.6, color: theme.ink, lineHeight: 1.05 }}>
               {t.today.greetingPrefix(hour)}{t.today.greetingSep}<span style={{ fontStyle: 'italic' }}>{username}</span>
             </div>
@@ -119,6 +159,22 @@ export default function TodayPage() {
             {avatarLetter}
           </button>
         </div>
+
+        {/* Past-date banner */}
+        {isPastDate && (
+          <div style={{ marginBottom: 10, padding: '6px 12px', background: theme.surfaceAlt, borderRadius: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span className="font-mono" style={{ fontSize: 11, color: theme.inkFaint, letterSpacing: 0.5 }}>
+              {t.today.pastDateBanner}
+            </span>
+            <button
+              onClick={() => handleDateChange(todayKey())}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: theme.accent, fontSize: 11, fontFamily: 'inherit', padding: 0 }}
+            >
+              {t.today.backToToday}
+            </button>
+          </div>
+        )}
+
         <MoodStrip selected={mood} onSelect={setMood} theme={theme} />
       </div>
 
@@ -197,6 +253,54 @@ export default function TodayPage() {
           </button>
         </div>
       </div>
+
+      {/* Date picker bottom sheet */}
+      {showDatePicker && (
+        <>
+          <div
+            onClick={() => setShowDatePicker(false)}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', zIndex: 50 }}
+          />
+          <div style={{
+            position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 51,
+            background: theme.surface,
+            borderRadius: '20px 20px 0 0',
+            padding: '16px 20px 40px',
+            borderTop: `1px solid ${theme.line}`,
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <button
+                onClick={() => setShowDatePicker(false)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: theme.inkSoft, fontSize: 15, fontFamily: 'inherit', padding: 0 }}
+              >
+                {t.today.cancel}
+              </button>
+              <span className="font-mono" style={{ fontSize: 11, color: theme.inkFaint, textTransform: 'uppercase', letterSpacing: 0.6 }}>
+                {t.today.pickDate}
+              </span>
+              <button
+                onClick={() => handleDateChange(pickerValue)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: theme.accent, fontSize: 15, fontFamily: 'inherit', fontWeight: 600, padding: 0 }}
+              >
+                {t.today.confirm}
+              </button>
+            </div>
+            <input
+              type="date"
+              value={pickerValue}
+              max={todayKey()}
+              onChange={e => setPickerValue(e.target.value)}
+              style={{
+                width: '100%', fontSize: 17, color: theme.ink,
+                background: 'transparent',
+                border: `1px solid ${theme.line}`,
+                borderRadius: 10, padding: '10px 12px',
+                fontFamily: 'inherit', boxSizing: 'border-box',
+              }}
+            />
+          </div>
+        </>
+      )}
     </>
   );
 }

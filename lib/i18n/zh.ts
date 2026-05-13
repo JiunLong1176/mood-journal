@@ -26,6 +26,12 @@ export const zh = {
     placeholderMood:   '现在在想什么？',
     placeholderNoMood: '请先选择一个心情…',
     fallbackReply:     '谢谢你与我分享。',
+    pastDateBanner:    '正在查看历史记录',
+    backToToday:       '回到今天',
+    unsavedWarning:    '有未发送的内容，确定切换日期吗？',
+    pickDate:          '选择日期',
+    cancel:            '取消',
+    confirm:           '确认',
   },
 
   archive: {
