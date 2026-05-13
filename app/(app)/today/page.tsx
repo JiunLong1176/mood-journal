@@ -132,15 +132,23 @@ export default function TodayPage() {
                   setShowDatePicker(true);
                 }
               }}
-              style={{ background: 'none', border: 'none', cursor: aiTyping ? 'default' : 'pointer', padding: 0, textAlign: 'left' }}
+              style={{
+                background: theme.surfaceAlt,
+                border: `1px solid ${theme.line}`,
+                borderRadius: 20,
+                cursor: aiTyping ? 'default' : 'pointer',
+                padding: '4px 10px',
+                display: 'inline-flex', alignItems: 'center', gap: 5,
+                marginBottom: 6,
+                opacity: aiTyping ? 0.5 : 1,
+              }}
             >
-              <div className="font-mono" style={{ fontSize: 11, color: theme.inkFaint, letterSpacing: 0.6, textTransform: 'uppercase', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
+              <span className="font-mono" style={{ fontSize: 11, color: theme.inkSoft, letterSpacing: 0.5, textTransform: 'uppercase' }}>
                 {selectedDateLabel}
-                <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: aiTyping ? 0.3 : 0.6 }}>
-                  <rect x="1" y="2" width="8" height="7" rx="1.5" />
-                  <path d="M3 1v2M7 1v2M1 5h8" />
-                </svg>
-              </div>
+              </span>
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: theme.inkSoft }}>
+                <path d="M2 3.5l3 3 3-3" />
+              </svg>
             </button>
             <div className="font-display" style={{ fontSize: 28, fontWeight: 500, letterSpacing: -0.6, color: theme.ink, lineHeight: 1.05 }}>
               {t.today.greetingPrefix(hour)}{t.today.greetingSep}<span style={{ fontStyle: 'italic' }}>{username}</span>
