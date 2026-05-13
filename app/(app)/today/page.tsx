@@ -18,6 +18,10 @@ function parseDateKey(key: string): Date {
   return new Date(y, m - 1, d);
 }
 
+function dayKey(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 export default function TodayPage() {
   const { theme, themeName } = useTheme();
   const { username, avatarLetter } = useUser();
@@ -30,7 +34,8 @@ export default function TodayPage() {
   const [loaded, setLoaded] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>(todayKey());
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [pickerValue, setPickerValue] = useState<string>(todayKey());
+  const [pickerEntries, setPickerEntries] = useState<Record<string, string>>({});
+  const [pickerMonth, setPickerMonth] = useState<Date>(new Date());
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -63,6 +68,25 @@ export default function TodayPage() {
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages, aiTyping]);
+
+  function openPicker() {
+    if (aiTyping) return;
+    const [y, m] = selectedDate.split('-').map(Number);
+    setPickerMonth(new Date(y, m - 1, 1));
+    setShowDatePicker(true);
+    if (Object.keys(pickerEntries).length === 0) {
+      fetch('/api/entries')
+        .then(r => r.json())
+        .then(data => {
+          if (Array.isArray(data)) {
+            const map: Record<string, string> = {};
+            data.forEach((e: { date: string; mood: string }) => { map[e.date] = e.mood; });
+            setPickerEntries(map);
+          }
+        })
+        .catch(() => {});
+    }
+  }
 
   function handleDateChange(newDate: string) {
     if (draft.trim().length > 0) {
@@ -113,11 +137,33 @@ export default function TodayPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ date: selectedDate, mood, messages: finalMessages }),
     }).catch(() => {});
+
+    setPickerEntries(prev => ({ ...prev, [selectedDate]: mood! }));
   }
 
   const moodObj = mood ? MOOD_BY_KEY[mood] : null;
   const canSend = !!mood && draft.trim().length > 0;
   const isPastDate = selectedDate !== todayKey();
+
+  // Calendar picker computed values
+  const today = new Date();
+  const pickerFirstDay = new Date(pickerMonth.getFullYear(), pickerMonth.getMonth(), 1);
+  const pickerDaysInMonth = new Date(pickerMonth.getFullYear(), pickerMonth.getMonth() + 1, 0).getDate();
+  const pickerCells: (Date | null)[] = [];
+  for (let i = 0; i < pickerFirstDay.getDay(); i++) pickerCells.push(null);
+  for (let d = 1; d <= pickerDaysInMonth; d++) pickerCells.push(new Date(pickerMonth.getFullYear(), pickerMonth.getMonth(), d));
+  while (pickerCells.length % 7 !== 0) pickerCells.push(null);
+
+  const isCurrentMonth = pickerMonth.getFullYear() === today.getFullYear() && pickerMonth.getMonth() === today.getMonth();
+  const pickerMonthLabel = pickerMonth.toLocaleDateString(dateLocale, { month: 'long', year: 'numeric' });
+
+  const navBtnStyle = {
+    width: 30, height: 30, borderRadius: 15,
+    background: theme.surfaceAlt,
+    border: `1px solid ${theme.line}`,
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    cursor: 'pointer', color: theme.ink, flexShrink: 0 as const,
+  };
 
   return (
     <>
@@ -126,12 +172,7 @@ export default function TodayPage() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: isPastDate ? 10 : 14 }}>
           <div>
             <button
-              onClick={() => {
-                if (!aiTyping) {
-                  setPickerValue(selectedDate);
-                  setShowDatePicker(true);
-                }
-              }}
+              onClick={openPicker}
               style={{
                 background: theme.surfaceAlt,
                 border: `1px solid ${theme.line}`,
@@ -262,50 +303,114 @@ export default function TodayPage() {
         </div>
       </div>
 
-      {/* Date picker bottom sheet */}
+      {/* Calendar date picker modal */}
       {showDatePicker && (
         <>
+          {/* Backdrop */}
           <div
             onClick={() => setShowDatePicker(false)}
-            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', zIndex: 50 }}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 50 }}
           />
+          {/* Centered card */}
           <div style={{
-            position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 51,
+            position: 'fixed', top: '50%', left: '50%',
+            transform: 'translate(-50%, -50%)',
+            zIndex: 51,
             background: theme.surface,
-            borderRadius: '20px 20px 0 0',
-            padding: '16px 20px 40px',
-            borderTop: `1px solid ${theme.line}`,
+            borderRadius: 20,
+            border: `1px solid ${theme.line}`,
+            padding: '16px 16px 20px',
+            width: 'min(92vw, 340px)',
+            boxShadow: '0 8px 40px rgba(0,0,0,0.18)',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            {/* Month navigation */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
               <button
-                onClick={() => setShowDatePicker(false)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: theme.inkSoft, fontSize: 15, fontFamily: 'inherit', padding: 0 }}
+                onClick={() => setPickerMonth(new Date(pickerMonth.getFullYear(), pickerMonth.getMonth() - 1, 1))}
+                style={navBtnStyle}
               >
-                {t.today.cancel}
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M8 2L4 6l4 4" /></svg>
               </button>
-              <span className="font-mono" style={{ fontSize: 11, color: theme.inkFaint, textTransform: 'uppercase', letterSpacing: 0.6 }}>
-                {t.today.pickDate}
+              <span className="font-display" style={{ fontSize: 15, fontWeight: 500, color: theme.ink, letterSpacing: -0.2 }}>
+                {pickerMonthLabel}
               </span>
-              <button
-                onClick={() => handleDateChange(pickerValue)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: theme.accent, fontSize: 15, fontFamily: 'inherit', fontWeight: 600, padding: 0 }}
-              >
-                {t.today.confirm}
-              </button>
+              <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                <button
+                  onClick={() => setPickerMonth(new Date(pickerMonth.getFullYear(), pickerMonth.getMonth() + 1, 1))}
+                  disabled={isCurrentMonth}
+                  style={{ ...navBtnStyle, opacity: isCurrentMonth ? 0.3 : 1, cursor: isCurrentMonth ? 'default' : 'pointer' }}
+                >
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 2l4 4-4 4" /></svg>
+                </button>
+                <button
+                  onClick={() => setShowDatePicker(false)}
+                  style={{ ...navBtnStyle }}
+                >
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M2 2l8 8M10 2l-8 8" /></svg>
+                </button>
+              </div>
             </div>
-            <input
-              type="date"
-              value={pickerValue}
-              max={todayKey()}
-              onChange={e => setPickerValue(e.target.value)}
-              style={{
-                width: '100%', fontSize: 17, color: theme.ink,
-                background: 'transparent',
-                border: `1px solid ${theme.line}`,
-                borderRadius: 10, padding: '10px 12px',
-                fontFamily: 'inherit', boxSizing: 'border-box',
-              }}
-            />
+
+            {/* Weekday headers */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 3, marginBottom: 4 }}>
+              {t.calendar.weekdays.map((w, i) => (
+                <div key={i} className="font-mono" style={{ textAlign: 'center', fontSize: 9, fontWeight: 600, color: theme.inkFaint, letterSpacing: 0.4, textTransform: 'uppercase' }}>
+                  {w}
+                </div>
+              ))}
+            </div>
+
+            {/* Day grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 3 }}>
+              {pickerCells.map((d, i) => {
+                if (!d) return <div key={i} style={{ aspectRatio: '1' }} />;
+                const k = dayKey(d);
+                const entryMood = pickerEntries[k];
+                const moodInfo = entryMood ? MOOD_BY_KEY[entryMood as MoodKey] : null;
+                const isToday = k === todayKey();
+                const isFuture = d > today;
+                const isSelected = k === selectedDate;
+
+                return (
+                  <button
+                    key={i}
+                    onClick={() => { if (!isFuture) handleDateChange(k); }}
+                    disabled={isFuture}
+                    style={{
+                      aspectRatio: '1',
+                      borderRadius: 10,
+                      background: isSelected
+                        ? theme.accent
+                        : moodInfo ? moodInfo.color + '22' : theme.surfaceAlt,
+                      border: isSelected
+                        ? 'none'
+                        : isToday
+                          ? `1.5px solid ${theme.accent}`
+                          : `1px solid ${theme.line}`,
+                      display: 'flex', flexDirection: 'column',
+                      alignItems: 'center', justifyContent: 'center',
+                      cursor: isFuture ? 'default' : 'pointer',
+                      opacity: isFuture ? 0.25 : 1,
+                      position: 'relative',
+                      padding: 0,
+                    }}
+                  >
+                    <span style={{
+                      fontSize: 9, fontWeight: 600,
+                      color: isSelected ? 'rgba(255,255,255,0.85)' : theme.inkFaint,
+                      position: 'absolute', top: 3, left: 5,
+                    }}>
+                      {d.getDate()}
+                    </span>
+                    {moodInfo && (
+                      <span style={{ fontSize: 15, lineHeight: 1, marginTop: 4 }}>
+                        {moodInfo.emoji}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </>
       )}
