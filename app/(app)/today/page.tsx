@@ -63,7 +63,14 @@ export default function TodayPage() {
   }
 
   useEffect(() => {
-    loadEntry(selectedDate);
+    const cached = allEntries.find(e => e.date === selectedDate);
+    if (cached) {
+      setMood(cached.mood as MoodKey);
+      setMessages(cached.messages as Message[]);
+      setLoaded(true);
+    } else {
+      loadEntry(selectedDate);
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
