@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTheme } from '@/components/providers/ThemeProvider';
 import { useUser } from '@/components/providers/UserProvider';
+import { useEntries } from '@/components/providers/EntriesProvider';
 import MoodStrip from '@/components/ui/MoodStrip';
 import { Bubble, TypingBubble, type Message } from '@/components/ui/Bubble';
 import { MoodKey, MOOD_BY_KEY } from '@/lib/moods';
@@ -25,6 +26,7 @@ function dayKey(d: Date): string {
 export default function TodayPage() {
   const { theme, themeName } = useTheme();
   const { username, avatarLetter } = useUser();
+  const { entries: allEntries, refresh } = useEntries();
   const { t, language } = useTranslation();
   const router = useRouter();
   const [mood, setMood] = useState<MoodKey | null>(null);
@@ -74,18 +76,9 @@ export default function TodayPage() {
     const [y, m] = selectedDate.split('-').map(Number);
     setPickerMonth(new Date(y, m - 1, 1));
     setShowDatePicker(true);
-    if (Object.keys(pickerEntries).length === 0) {
-      fetch('/api/entries')
-        .then(r => r.json())
-        .then(data => {
-          if (Array.isArray(data)) {
-            const map: Record<string, string> = {};
-            data.forEach((e: { date: string; mood: string }) => { map[e.date] = e.mood; });
-            setPickerEntries(map);
-          }
-        })
-        .catch(() => {});
-    }
+    const map: Record<string, string> = {};
+    allEntries.forEach(e => { map[e.date] = e.mood; });
+    setPickerEntries(map);
   }
 
   function handleDateChange(newDate: string) {
@@ -136,7 +129,7 @@ export default function TodayPage() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ date: selectedDate, mood, messages: finalMessages }),
-    }).catch(() => {});
+    }).then(() => refresh()).catch(() => {});
 
     setPickerEntries(prev => ({ ...prev, [selectedDate]: mood! }));
   }

@@ -1,11 +1,10 @@
 'use client';
-import { useEffect, useState } from 'react';
 import { useTheme } from '@/components/providers/ThemeProvider';
 import { useTranslation } from '@/components/providers/LanguageProvider';
+import { useEntries } from '@/components/providers/EntriesProvider';
 import Header from '@/components/ui/Header';
 import { MOODS } from '@/lib/moods';
 import type { MoodKey } from '@/lib/moods';
-type Entry = { date: string; mood: string; messages: { from: string; text: string }[] };
 
 function dayKey(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -58,15 +57,7 @@ function SkeletonInsights({ theme }: { theme: any }) {
 export default function InsightsPage() {
   const { theme } = useTheme();
   const { t } = useTranslation();
-  const [entries, setEntries] = useState<Entry[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch('/api/entries')
-      .then(r => r.json())
-      .then(data => { if (Array.isArray(data)) setEntries(data); setLoading(false); })
-      .catch(() => setLoading(false));
-  }, []);
+  const { entries, loading } = useEntries();
 
   const today = new Date();
   const last30 = entries.filter(e => {

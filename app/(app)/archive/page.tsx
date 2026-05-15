@@ -1,8 +1,9 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { useTheme } from '@/components/providers/ThemeProvider';
 import { useTranslation } from '@/components/providers/LanguageProvider';
+import { useEntries } from '@/components/providers/EntriesProvider';
 import Header from '@/components/ui/Header';
 import { MOODS, MOOD_BY_KEY } from '@/lib/moods';
 import type { MoodKey } from '@/lib/moods';
@@ -46,17 +47,9 @@ function SkeletonCard({ theme }: { theme: any }) {
 export default function ArchivePage() {
   const { theme } = useTheme();
   const { t, language } = useTranslation();
-  const [entries, setEntries] = useState<Entry[]>([]);
+  const { entries, loading } = useEntries();
   const [search, setSearch] = useState('');
   const [moodFilter, setMoodFilter] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch('/api/entries').then(r => r.json()).then(data => {
-      if (Array.isArray(data)) setEntries(data);
-      setLoading(false);
-    }).catch(() => setLoading(false));
-  }, []);
 
   const filtered = entries.filter(e => {
     if (moodFilter && e.mood !== moodFilter) return false;

@@ -1,29 +1,23 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { useTheme } from '@/components/providers/ThemeProvider';
 import { useTranslation } from '@/components/providers/LanguageProvider';
+import { useEntries } from '@/components/providers/EntriesProvider';
 import Header from '@/components/ui/Header';
 import { MOODS, MOOD_BY_KEY } from '@/lib/moods';
 function dayKey(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-type Entry = { date: string; mood: string; messages: { from: string; text: string; time: string }[] };
-
 export default function CalendarPage() {
   const { theme } = useTheme();
   const { t, language } = useTranslation();
+  const { entries, loading } = useEntries();
   const [viewMonth, setViewMonth] = useState(() => {
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), 1);
   });
-  const [entries, setEntries] = useState<Entry[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch('/api/entries').then(r => r.json()).then(data => { if (Array.isArray(data)) setEntries(data); }).catch(() => {}).finally(() => setLoading(false));
-  }, []);
 
   const entriesByDate = Object.fromEntries(entries.map(e => [e.date, e]));
   const today = new Date();

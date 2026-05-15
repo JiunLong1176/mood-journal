@@ -1,8 +1,9 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useTheme } from '@/components/providers/ThemeProvider';
 import { useUser } from '@/components/providers/UserProvider';
 import { useTranslation } from '@/components/providers/LanguageProvider';
+import { useEntries } from '@/components/providers/EntriesProvider';
 import type { Language } from '@/components/providers/LanguageProvider';
 import Header from '@/components/ui/Header';
 import type { ThemeName } from '@/lib/themes';
@@ -23,32 +24,22 @@ export default function SettingsPage() {
   const { theme, themeName, setTheme } = useTheme();
   const { username, avatarLetter, createdAt } = useUser();
   const { t, language, setLanguage } = useTranslation();
+  const { entries } = useEntries();
   const [aiTone, setAiTone] = useState(() =>
     typeof window !== 'undefined' ? (localStorage.getItem('beans_ai_tone') ?? 'friend') : 'friend'
   );
   const [reminderOn, setReminderOn] = useState(true);
   const [reminderTime, setReminderTime] = useState('21:00');
-  const [entryCount, setEntryCount] = useState(0);
-  const [streak, setStreak] = useState(0);
 
-  useEffect(() => {
-    fetch('/api/entries')
-      .then(r => r.json())
-      .then((entries: { date: string }[]) => {
-        if (!Array.isArray(entries)) return;
-        setEntryCount(entries.length);
-        let s = 0;
-        const today = new Date();
-        for (let i = 0; i < 60; i++) {
-          const d = new Date(today);
-          d.setDate(d.getDate() - i);
-          if (entries.find(e => e.date === dateKey(d))) s++;
-          else break;
-        }
-        setStreak(s);
-      })
-      .catch(() => {});
-  }, []);
+  const entryCount = entries.length;
+  let streak = 0;
+  const _today = new Date();
+  for (let i = 0; i < 60; i++) {
+    const d = new Date(_today);
+    d.setDate(d.getDate() - i);
+    if (entries.find(e => e.date === dateKey(d))) streak++;
+    else break;
+  }
 
   const dateLocale = language === 'zh' ? 'zh-CN' : 'en-US';
   const memberSince = createdAt
