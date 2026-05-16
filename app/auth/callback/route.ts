@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase-server';
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const code = url.searchParams.get('code');
+  const next = url.searchParams.get('next') ?? '/today';
 
   if (code) {
     const supabase = await createClient();
@@ -17,10 +18,5 @@ export async function GET(request: Request) {
     }
   }
 
-  const type = url.searchParams.get('type');
-  if (type === 'recovery') {
-    return NextResponse.redirect(new URL('/auth/reset-password', request.url));
-  }
-
-  return NextResponse.redirect(new URL('/today', request.url));
+  return NextResponse.redirect(new URL(next, request.url));
 }

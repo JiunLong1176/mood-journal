@@ -16,21 +16,10 @@ export default function ResetPasswordPage() {
   const { t } = useTranslation();
 
   useEffect(() => {
-    // Implicit flow: Supabase fires PASSWORD_RECOVERY when it detects the hash tokens
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY') setReady(true);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) setReady(true);
+      else setError(t.resetPassword.errorGeneric);
     });
-
-    // PKCE flow fallback: exchange code query param for session
-    const code = new URLSearchParams(window.location.search).get('code');
-    if (code) {
-      supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
-        if (error) setError(t.resetPassword.errorGeneric);
-        else setReady(true);
-      });
-    }
-
-    return () => subscription.unsubscribe();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
